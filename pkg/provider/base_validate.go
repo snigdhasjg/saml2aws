@@ -16,8 +16,5 @@ func (ac *ValidateBase) Validate(ld *creds.LoginDetails) error {
 	if ld.Username == "" {
 		return errors.New("Empty username")
 	}
-	if ld.Password == "" {
-		return errors.New("Empty password")
-	}
 	return nil
 }

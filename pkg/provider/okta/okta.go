@@ -71,7 +71,7 @@ type Client struct {
 // AuthRequest represents an mfa okta request
 type AuthRequest struct {
 	Username   string `json:"username"`
-	Password   string `json:"password"`
+	Password   string `json:"password,omitempty"`
 	StateToken string `json:"stateToken,omitempty"`
 }
 
@@ -209,6 +209,11 @@ func (oc *Client) createSession(loginDetails *creds.LoginDetails, sessionToken s
 	switch sessionResponseStatus {
 	case "ACTIVE":
 		logger.Debug("okta session established")
+	case "UNAUTHENTICATED":
+		oktaSessionToken, err = verifyMfa(oc, oktaOrgHost, loginDetails, resp)
+		if err != nil {
+			return "", "", errors.Wrap(err, "error verifying MFA")
+		}
 	case "MFA_REQUIRED":
 		oktaSessionToken, err = verifyMfa(oc, oktaOrgHost, loginDetails, resp)
 		if err != nil {
@@ -475,6 +480,11 @@ func (oc *Client) Authenticate(loginDetails *creds.LoginDetails) (string, error)
 	}
 
 	switch authStatus {
+	case "UNAUTHENTICATED":
+		oktaSessionToken, err = verifyMfa(oc, oktaOrgHost, loginDetails, primaryAuthResp)
+		if err != nil {
+			return "", errors.Wrap(err, "error verifying MFA")
+		}
 	case "MFA_REQUIRED":
 		oktaSessionToken, err = verifyMfa(oc, oktaOrgHost, loginDetails, primaryAuthResp)
 		if err != nil {
